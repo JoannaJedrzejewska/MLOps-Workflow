@@ -1,0 +1,216 @@
+schema: '2.0'
+stages:
+  download_data:
+    cmd: python src/download_data.py
+    deps:
+    - path: src/download_data.py
+      hash: md5
+      md5: e5fcecc248cb068baef3e5dda5e0a086
+      size: 438
+    outs:
+    - path: data/penguins.csv
+      hash: md5
+      md5: c8dd148b7ed1ac46a4aa88b3bade47e4
+      size: 21525
+  prepare_data:
+    cmd: python src/prepare_data.py
+    deps:
+    - path: data/penguins.csv
+      hash: md5
+      md5: c8dd148b7ed1ac46a4aa88b3bade47e4
+      size: 21525
+    - path: src/prepare_data.py
+      hash: md5
+      md5: fb393ac8d5a7c04e71f7ed3c491443ce
+      size: 1269
+    params:
+      params.yaml:
+        data.random_state: 42
+        data.target_column: species
+        data.test_size: 0.2
+    outs:
+    - path: data/test.csv
+      hash: md5
+      md5: 0fde66d5e09c253b5a30c473f38e16ee
+      size: 4990
+    - path: data/train.csv
+      hash: md5
+      md5: 88f539a538eab3233c8e09e54123a0ba
+      size: 19556
+    - path: models/encoder.pkl
+      hash: md5
+      md5: 6676da56f581b9f7dd02ac7431b641c7
+      size: 671
+  train_model:
+    cmd: python src/train_model.py
+    deps:
+    - path: data/train.csv
+      hash: md5
+      md5: 88f539a538eab3233c8e09e54123a0ba
+      size: 19556
+    - path: models/encoder.pkl
+      hash: md5
+      md5: 6676da56f581b9f7dd02ac7431b641c7
+      size: 671
+    - path: src/train_model.py
+      hash: md5
+      md5: a28cb30cc69427e78c84bed63e0052ef
+      size: 2170
+    params:
+      params.yaml:
+        mlflow:
+          experiment_name: penguins-optuna
+          tracking_uri: mlruns
+        model:
+          n_estimators_min: 50
+          n_estimators_max: 300
+          max_depth_min: 2
+          max_depth_max: 20
+          min_samples_split_min: 2
+          min_samples_split_max: 10
+          min_samples_leaf_min: 1
+          min_samples_leaf_max: 8
+        optuna:
+          n_trials: 20
+          cv_folds: 5
+          study_name: penguins-optuna
+    outs:
+    - path: models/model.pkl
+      hash: md5
+      md5: 11ced878862534fed2564319c24204ce
+      size: 294120
+  evaluate:
+    cmd: python src/evaluate.py
+    deps:
+    - path: data/test.csv
+      hash: md5
+      md5: 0fde66d5e09c253b5a30c473f38e16ee
+      size: 4990
+    - path: models/encoder.pkl
+      hash: md5
+      md5: 6676da56f581b9f7dd02ac7431b641c7
+      size: 671
+    - path: models/model.pkl
+      hash: md5
+      md5: 11ced878862534fed2564319c24204ce
+      size: 294120
+    - path: src/evaluate.py
+      hash: md5
+      md5: 79c46c60d37897347e179afa994c866b
+      size: 1144
+    outs:
+    - path: metrics.json
+      hash: md5
+      md5: f151337c004d4bb8e131af72b97dacb8
+      size: 43
+  register_bentoml:
+    cmd: python src/register_bentoml.py
+    deps:
+    - path: metrics.json
+      hash: md5
+      md5: f151337c004d4bb8e131af72b97dacb8
+      size: 43
+    - path: models/encoder.pkl
+      hash: md5
+      md5: 6676da56f581b9f7dd02ac7431b641c7
+      size: 671
+    - path: models/model.pkl
+      hash: md5
+      md5: 11ced878862534fed2564319c24204ce
+      size: 294120
+    - path: src/register_bentoml.py
+      hash: md5
+      md5: 2e5cebccd280959ee7889543353c8bbc
+      size: 818
+  eda:
+    cmd: python src/eda.py
+    deps:
+    - path: data/penguins.csv
+      hash: md5
+      md5: c8dd148b7ed1ac46a4aa88b3bade47e4
+      size: 21525
+    - path: src/eda.py
+      hash: md5
+      md5: 822589a8b3807a4c462ff7c3bb71239c
+      size: 1687
+    outs:
+    - path: reports/eda_figures/
+      hash: md5
+      md5: e7cf15fdcb6b1494d449b330f05c5db7.dir
+      size: 940467
+      nfiles: 4
+  explain:
+    cmd: python src/explain.py
+    deps:
+    - path: data/test.csv
+      hash: md5
+      md5: 0fde66d5e09c253b5a30c473f38e16ee
+      size: 4990
+    - path: models/model.pkl
+      hash: md5
+      md5: 11ced878862534fed2564319c24204ce
+      size: 294120
+    - path: src/explain.py
+      hash: md5
+      md5: 26b762e7c9aa41edcd448f82ef1f2120
+      size: 1670
+    outs:
+    - path: reports/explain_figures/
+      hash: md5
+      md5: f323ff447eb99b9595de39ce1f4c0640.dir
+      size: 67750
+      nfiles: 1
+  learning_curve:
+    cmd: python src/learning_curve.py
+    deps:
+    - path: data/train.csv
+      hash: md5
+      md5: 88f539a538eab3233c8e09e54123a0ba
+      size: 19556
+    - path: models/model.pkl
+      hash: md5
+      md5: 11ced878862534fed2564319c24204ce
+      size: 294120
+    - path: src/learning_curve.py
+      hash: md5
+      md5: 7add1028cbcd8bf1fc272ddeb6fd1a53
+      size: 1322
+    outs:
+    - path: reports/learning_curve_figures/
+      hash: md5
+      md5: 21937f469832368bf411deef43669c55.dir
+      size: 49080
+      nfiles: 1
+  map_viz:
+    cmd: python src/map_viz.py
+    deps:
+    - path: data/penguins.csv
+      hash: md5
+      md5: c8dd148b7ed1ac46a4aa88b3bade47e4
+      size: 21525
+    - path: src/map_viz.py
+      hash: md5
+      md5: 79c0edbd53b950ad8eb0cfcfb9bab139
+      size: 940
+    outs:
+    - path: reports/map_figures/
+      hash: md5
+      md5: ce241ce1649b7e920e1a03a9d859dfc9.dir
+      size: 6939
+      nfiles: 1
+  generate_report:
+    cmd: python src/generate_report.py
+    deps:
+    - path: data/penguins.csv
+      hash: md5
+      md5: c8dd148b7ed1ac46a4aa88b3bade47e4
+      size: 21525
+    - path: src/generate_report.py
+      hash: md5
+      md5: eb48ba355011625329a6229c8f27c205
+      size: 733
+    outs:
+    - path: reports/eda_report.md
+      hash: md5
+      md5: 56134131181ea517164918435ee58645
+      size: 1574

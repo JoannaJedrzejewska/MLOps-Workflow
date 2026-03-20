@@ -1,0 +1,23 @@
+data:
+  test_size: 0.2
+  random_state: 42
+  target_column: species
+
+optuna:
+  n_trials: 20
+  cv_folds: 5
+  study_name: penguins-optuna
+
+model:
+  n_estimators_min: 50
+  n_estimators_max: 300
+  max_depth_min: 2
+  max_depth_max: 20
+  min_samples_split_min: 2
+  min_samples_split_max: 10
+  min_samples_leaf_min: 1
+  min_samples_leaf_max: 8
+
+mlflow:
+  experiment_name: penguins-optuna
+  tracking_uri: mlruns
